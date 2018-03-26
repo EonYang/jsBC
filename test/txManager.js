@@ -1,0 +1,37 @@
+const fs = require("fs");
+const crypto = require("crypto");
+
+const sign = crypto.createSign('SHA256');
+const hash = crypto.createHash('SHA256');
+const verify = crypto.createVerify('SHA256');
+
+var txManager = require("../js/transaction.js");
+
+var bobKeys = {};
+fs.readFile('../keys_test/bob_key.pem', (err, data) => {
+    if (err) throw err;
+    console.log(`the date we just get is: ${data}, and it should be a private key`);
+    bobKeys.private = data;
+});
+fs.readFile('../keys_test/bob_pubkey.pem', (err, data) => {
+    if (err) throw err;
+    console.log(`the date we just get is: ${data}, and it should be a public key`);
+    bobKeys.public = data;
+});
+
+let aliceKeys = {};
+fs.readFile('../keys_test/alice_key.pem', (err, data) => {
+    if (err) throw err;
+    console.log(`the date we just get is: ${data}, and it should be a private key`);
+    aliceKeys.private = data;
+});
+fs.readFile('../keys_test/alice_pubkey.pem', (err, data) => {
+    if (err) throw err;
+    console.log(`the date we just get is: ${data}, and it should be a public key`);
+    aliceKeys.public = data;
+});
+
+setTimeout(() => {
+    let tx = txManager.CreateTransaction(bobKeys.private, bobKeys.public, aliceKeys.public, 28);
+console.log(JSON.stringify(tx));
+}, 3000);

@@ -1,7 +1,13 @@
-var http = require("http");
+const http = require("http");
+const request = require("request");
+const express = require("express");
+const app = express();
+const port = 8910;
 
-http.createServer(
-    function(req, res) {
-        res.end("hello i'm a cool app built via VIM");
-        console.log("new connection");
-    }).listen(6666);
+app.listen(port, () => {
+    console.log(`listening port : ${port}`);
+});
+
+app.get("/", (req, res) => {
+    res.send("Ahahahahaha!");
+});
