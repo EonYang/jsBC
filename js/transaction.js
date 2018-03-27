@@ -1,5 +1,8 @@
 const testData = require("../testDataGenerator.js");
 const chain = testData.chain;
+
+const crypto = require("crypto");
+
 // this class will create transaction, and validate transactions.
 // data structure:
 //
@@ -52,6 +55,10 @@ class TransactionManager {
     }
 
     CreateTransaction(privateKey, senderAddress, receiverAddress, value) {
+        let signer = crypto.createSign('SHA256');
+        let bodyHasher = crypto.createHash('SHA256');
+        let headerHasher = crypto.createHash('SHA256');
+        let verify = crypto.createVerify('SHA256');
         let tx = {
             "hash": "",
             "header": {
@@ -85,7 +92,63 @@ class TransactionManager {
                 "prev_out_hash": prevOuts[i].tx_hash
             });
         }
+
+        // culculate refund amount.
+        // if total prev_out is larger than needed, creat a refund output/
+        if (valueCollected > value) {
+            let refundOutput = {
+                "address": senderAddress,
+                "value": (valueCollected - value).toString()
+            };
+            tx.body.out.push(refundOutput);
+        }
+
+        //hash the body;
+        bodyHasher.update(JSON.stringify(tx.body));
+        let bodyHash = bodyHasher.digest('base64');
+        // sign the bodyhash use sender's private key;
+        signer.update(bodyHash);
+        let signature = signer.sign(privateKey, 'base64');
+
+        // write it to header
+        tx.header.signature = signature;
+
+        // hash the header, store it to tx
+        headerHasher.update(JSON.stringify(tx.header));
+        tx.hash = headerHasher.digest('base64');
+
         return tx;
+    }
+
+    VerifyTransaction(tx) {
+        let bodyHasher = crypto.createHash('SHA256');
+        let headerHasher = crypto.createHash('SHA256');
+        let verifier = crypto.createVerify('SHA256');
+        //hash the body, then compare the signature, sender address, body hash
+        bodyHasher.update(JSON.stringify(tx.body));
+        let bodyHash = bodyHasher.digest('base64');
+
+        verifier.update(bodyHash);
+        let signatureValidity = verifier.verify(tx.body.from_address, tx.header.signature, 'base64');
+
+        let sigValidityText = signatureValidity ? `the signature is valid` : `the signature is invalid, INVALID!!!`;
+        console.log(sigValidityText);
+
+        //hash the header, see if header has changed
+        headerHasher.update(JSON.stringify(tx.header));
+        let headerHash = headerHasher.digest('base64');
+        let headerConsistency = headerHash === tx.hash ? true : false;
+        let headerConsisText = headerConsistency ? `the header hash matchs` : `the header hash does't match!!!`;
+        console.log(headerConsisText);
+
+        // return the resault
+        if (signatureValidity && headerConsistency) {
+            console.log('the signature matchs the body Hash and the sender address, and the hash matchs the header hash');
+            return true;
+        } else {
+            console.log(`something changed here`);
+            return false;
+        }
     }
 }
 
