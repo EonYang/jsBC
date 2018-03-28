@@ -17,6 +17,8 @@ let transactionExample = {
     "body": {
         // there is not a thing like this in Bitcoin, which I don't know why. I do this to make it easy to understand.
         "from_address": "public key of this sender",
+        // store fee in here, it will be easy to culculate.
+        "fee": "string of number",
         "in": [
             // there would be multiple ins in order to get enough amount of coin for the output
             // after this transaction, the following outputs would be spended
@@ -54,7 +56,7 @@ class TransactionManager {
         this.version = "0.1";
     }
 
-    CreateTransaction(privateKey, senderAddress, receiverAddress, value) {
+    CreateTransaction(privateKey, senderAddress, receiverAddress, value, fee) {
         let signer = crypto.createSign('SHA256');
         let bodyHasher = crypto.createHash('SHA256');
         let headerHasher = crypto.createHash('SHA256');
@@ -63,13 +65,11 @@ class TransactionManager {
             "hash": "",
             "header": {
                 "ver": this.version,
-                //signature created by the hash of the body and user's privatekey, 
                 "signature": ""
             },
-            // i will skip the size, in size, out size, and lock 
             "body": {
-                // there is not a thing like this in Bitcoin, which I don't know why. I do this to make it easy to understand.
                 "from_address": senderAddress,
+                "fee": fee.toString(),
                 "in": [],
                 "out": [{
                     "address": receiverAddress,

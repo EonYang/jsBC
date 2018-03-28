@@ -8,7 +8,7 @@ const verify = crypto.createVerify('SHA256');
 var txManager = require("../js/transaction.js");
 
 var bobKeys = {};
-fs.readFile('../keys_test/bob_key.pem', (err, data) => {
+fs.readFile(__dirname + '/keys_test/bob_key.pem', (err, data) => {
     if (err) throw err;
     console.log(`the date we just get is: ${data}, and it should be a private key`);
     bobKeys.private = data.toString();
@@ -32,7 +32,7 @@ fs.readFile('../keys_test/alice_pubkey.pem', (err, data) => {
 });
 
 setTimeout(() => {
-    let tx = txManager.CreateTransaction(bobKeys.private, bobKeys.public, aliceKeys.public, 8);
+    let tx = txManager.CreateTransaction(bobKeys.private, bobKeys.public, aliceKeys.public, 8, 0.0000002);
     console.log(JSON.stringify(tx));
 
     let validity = txManager.VerifyTransaction(tx);
